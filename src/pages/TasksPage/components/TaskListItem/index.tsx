@@ -10,6 +10,7 @@ interface TaskListItemProps {
 }
 
 export function TaskListItem({ task, onRemove, onSave }: TaskListItemProps) {
+  
   const [isEditing, setIsEditing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const refInput = useRef<HTMLInputElement>(null);

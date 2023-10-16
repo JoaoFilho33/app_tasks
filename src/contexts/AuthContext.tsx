@@ -1,48 +1,54 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-type User = {
-  username: string
+interface User {
+  username: string;
 }
 
-interface AuthContextType {
-  user: User | null
-  signin: (user: User) => void
-  signout: () => void
-  isAuthenticated: boolean
+interface AuthContextProps {
+  user: User | null;
+  signin: (user: User) => void;
+  signout: () => void;
+  isAuthenticated: boolean;
 }
 
-const defaultValue = {} as AuthContextType
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-const AuthContext = createContext<AuthContextType>(defaultValue)
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
 
-interface AuthProviderProps {
-  children: React.ReactNode
-}
+  useEffect(() => {
+    // Tente recuperar o usuário do localStorage ao carregar a aplicação
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
-// AuthProvider encapsula o AuthContextProvider
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null)
+  const signin = (newUser: User) => {
+    setUser(newUser);
+    // Salve o usuário no localStorage
+    localStorage.setItem("user", JSON.stringify(newUser));
+  };
 
-  const signin = (user: User) => { setUser(user); }
+  const signout = () => {
+    setUser(null);
+    // Remova o usuário do localStorage ao fazer logout
+    localStorage.removeItem("user");
+  };
 
-  const signout = () => { setUser(null); }
-
-  const value = useMemo(() => ({
-    user, signin, signout, isAuthenticated: user !== null
-  }), [user])
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, signin, signout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
 
-export const useAuth = (): AuthContextType => {
-  const authContext = useContext(AuthContext)
-
-  if (!authContext)
-    throw new Error('useAuth fora do AuthProvider!')
-
-  return authContext
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

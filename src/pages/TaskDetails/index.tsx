@@ -1,7 +1,7 @@
 import React from "react";
 import { Task } from "../TasksPage/components/..";
 
-interface TaskDetailsProps {
+export interface TaskDetailsProps {
   task: Task;
 }
 
